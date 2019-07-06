@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="unity,shader,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="[TOC] 光 方向 l表示方式 辐射度 irradiance, 垂直于l的单位面积上单位时间内穿过的能量就是辐射度 颜色  吸收absorption不改变 方向改变 光的密度和颜色 散射scattering改变光的方向不改变光的颜色和密度  折射 refraction(透射transmission)     通过漫反射diffuse来模拟，有多少光线被折射、吸收、和散射出表面 反射 reflec">
+<meta name="keywords" content="unity,shader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="光 光照模型 漫反射">
+<meta property="og:url" content="http://blogs.jiaqiang.fun/2019/02/21/unity-light-mode/index.html">
+<meta property="og:site_name" content="不积跬步无以至千里">
+<meta property="og:description" content="[TOC] 光 方向 l表示方式 辐射度 irradiance, 垂直于l的单位面积上单位时间内穿过的能量就是辐射度 颜色  吸收absorption不改变 方向改变 光的密度和颜色 散射scattering改变光的方向不改变光的颜色和密度  折射 refraction(透射transmission)     通过漫反射diffuse来模拟，有多少光线被折射、吸收、和散射出表面 反射 reflec">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-03-14T21:32:22.713Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="光 光照模型 漫反射">
+<meta name="twitter:description" content="[TOC] 光 方向 l表示方式 辐射度 irradiance, 垂直于l的单位面积上单位时间内穿过的能量就是辐射度 颜色  吸收absorption不改变 方向改变 光的密度和颜色 散射scattering改变光的方向不改变光的颜色和密度  折射 refraction(透射transmission)     通过漫反射diffuse来模拟，有多少光线被折射、吸收、和散射出表面 反射 reflec">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blogs.jiaqiang.fun/2019/02/21/unity-light-mode/">
+
+
+
+
+
+  <title>光 光照模型 漫反射 | 不积跬步无以至千里</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不积跬步无以至千里</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blogs.jiaqiang.fun/2019/02/21/unity-light-mode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiaq">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不积跬步无以至千里">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">光 光照模型 漫反射</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-21T11:07:15+08:00">
+                2019-02-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>[TOC]</p>
+<h4 id="光"><a href="#光" class="headerlink" title="光"></a>光</h4><ol>
+<li>方向 l表示方式</li>
+<li>辐射度 irradiance, 垂直于l的单位面积上单位时间内穿过的能量就是辐射度</li>
+<li>颜色</li>
+</ol>
+<h5 id="吸收absorption"><a href="#吸收absorption" class="headerlink" title="吸收absorption"></a>吸收absorption</h5><p>不改变 方向<br>改变 光的密度和颜色</p>
+<h5 id="散射scattering"><a href="#散射scattering" class="headerlink" title="散射scattering"></a>散射scattering</h5><p>改变光的方向<br>不改变光的颜色和密度</p>
+<ol>
+<li>折射 refraction(透射transmission)     通过漫反射diffuse来模拟，有多少光线被折射、吸收、和散射出表面</li>
+<li>反射 reflection                                      通过高光反射来反应模拟specular</li>
+</ol>
+<h5 id="出射度"><a href="#出射度" class="headerlink" title="出射度"></a>出射度</h5><p>辐射度和出射度之间满足一定线性关系，这个比值就是材质的漫反射和高光反射属性</p>
+<h4 id="标准光照模型"><a href="#标准光照模型" class="headerlink" title="标准光照模型"></a>标准光照模型</h4><p>通常光有以下四部分组成</p>
+<ol>
+<li>自发光emissive  $c_{emissive}$  直接用了该材质的颜色 $c_{missive}=m_{emissive}$  </li>
+<li>高光反射specular $c_{specular}​$</li>
+<li>漫反射diffuse $c_{diffuse}$ 是那些被物体表面随机散射到各个方向的辐射度，各个位置都有完全随机，用兰伯特定律来模拟：反射光线的强度和表面法线和光源方向之间的夹角的余弦值成正比$c_{diffuse}=(c_{light}·m_{diffuse})max(0,n·I)$ n为表面法线，I是指向光源的单位矢量，m_diffuse漫反射颜色，c_light光源颜色</li>
+<li>环境光ambient  $c_{ambient}$  近似模拟间接光照  $c_{ambient}=g_{ambient}$ 内置变量UNITY_LIGHTMODEL_AMBIENT可以得到环境光的颜色和强度信息</li>
+</ol>
+<h5 id="Phong模型泊松模型"><a href="#Phong模型泊松模型" class="headerlink" title="Phong模型泊松模型"></a>Phong模型泊松模型</h5><ol>
+<li><p>表面法线 n</p>
+</li>
+<li><p>入射角 I</p>
+</li>
+<li><p>反射角 r</p>
+</li>
+<li><p>视角方向 v</p>
+</li>
+</ol>
+<p>这是模型基础，只要知道一个就可以求得其他a·b=|a||b|cosa</p>
+<p>r+I=2n(n·I) 所以r=2n(n·I)-I  </p>
+<p>泊松模型 :</p>
+<p>$C_{specular} = C_{light}m_{specular}max(0, v·r)^{m_{gloss}}​$</p>
+<p>其中m_gloss为光泽度也被成为反光度，用于控制高光区域的亮点，m_gloss越大，亮点越小<br>m_specular是材质的高光反射颜色用于控制该材质对于高光反射的强度和颜色<br>c_light是光源的颜色和强度</p>
+<h5 id="Blinn模型"><a href="#Blinn模型" class="headerlink" title="Blinn模型"></a>Blinn模型</h5><p>思路是避免求反射角引入 视角和入射角相加再归一化h=(v+I)/|v+i|,然后使用n和h的夹角来计算高光<br>$C_{specular} = C_{light}m_{specular}max(0, v·h)^{m_{gloss}}$</p>
+<h5 id="半兰伯特模型"><a href="#半兰伯特模型" class="headerlink" title="半兰伯特模型"></a>半兰伯特模型</h5><p>适用于漫反射光照模型，在平面某点漫反射光的光强与该反射点的法向量和入射光角度的余弦值成正比,这样在光照无法到达的区域，模型的外观通常是全黑的，没有任何明暗变化，是去了模型细节表现，为了改善这种情况，加了两个参数<br>cdiffuse = clight mdiffuse (a(ni) + b), 当a和b都等于0.5时候就是半兰伯特光照模型</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">Shader <span class="string">"My/specular-pixel_level"</span></span><br><span class="line">&#123;</span><br><span class="line">    Properties &#123;</span><br><span class="line">        _Diffuse(<span class="string">"Diffuse"</span>, Color) = (<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line">        _Specular(<span class="string">"Specular"</span>, Color) = (<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line">        _Gloss(<span class="string">"Gloss"</span>, Range(<span class="number">8</span>,<span class="number">256</span>)) = <span class="number">20</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SubShader&#123;</span><br><span class="line">        Pass&#123;</span><br><span class="line">            Tag&#123;<span class="string">"LightMode"</span>=<span class="string">"ForwardBase"</span>&#125;</span><br><span class="line"></span><br><span class="line">            CGPROGRAM</span><br><span class="line">                <span class="meta">#<span class="meta-keyword">pragma</span> vertex vert</span></span><br><span class="line">                <span class="meta">#<span class="meta-keyword">pragma</span> fragment frag</span></span><br><span class="line"></span><br><span class="line">                <span class="meta">#include "Lighting.cginc"</span></span><br><span class="line"></span><br><span class="line">                fixed4 _Diffuse;</span><br><span class="line">                fixed4 _Specular;</span><br><span class="line">                <span class="keyword">float</span>  _Gloss;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">struct</span> a2v&#123;</span><br><span class="line">                    float4 vertex : POSITION;</span><br><span class="line">                    float3 normal : NORMAL;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">struct</span> v2f&#123;</span><br><span class="line">                    float4 pos : SV_POSITION;</span><br><span class="line">                    float3 worldNormal : TEXCOORD0;</span><br><span class="line">                    float3 worldPos : TEXCOORD1;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                <span class="function">v2f <span class="title">vert</span>(<span class="params">a2v v</span>)</span>&#123;</span><br><span class="line">                    v2f o;</span><br><span class="line">                    o.pos = mul(UNITY_MATRIX_MVP, v.vertex);</span><br><span class="line">                    o.worldNormal = mul(v.normal, _World2Object);</span><br><span class="line">                    o.worldPos = mul(_Object2World, v.vertex).xyz;</span><br><span class="line">                    <span class="keyword">return</span> o;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="function">fixed4 <span class="title">frag</span>(<span class="params">v2f i</span>) : SV_Target</span>&#123;</span><br><span class="line">                                     </span><br><span class="line">                    fixed3 ambient = UNITY_LIGHTMODE_AMBIENT.xyz;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">//计算法线</span></span><br><span class="line">                    fixed3 worldNormal = normalize(mul(v.normal, 	(float3x3)_World2Object));</span><br><span class="line">                    fixed3 worldLightDir = normalize(_WorldSpaceLightPos0.xyz);</span><br><span class="line">                    <span class="comment">//计算漫反射</span></span><br><span class="line">                    fixed3 diffuse = _LightColor0.rgb * _Diffuse.rgb * saturate(dot(worldNormal, worldLightDir));</span><br><span class="line">                    <span class="comment">//计算高光反射</span></span><br><span class="line">                    fixed3 reflectDir = normalize(reflect(-WorldLightDir, worldNormal));</span><br><span class="line">                    <span class="comment">//得到观察视角</span></span><br><span class="line">                    fixed3 viewDir = normalize(_WorldSpaceCameraPos.xyz - mul(_Object2World, v.vertex).xyz);</span><br><span class="line">                    fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(saturate(dot(reflectDir, viewDir)), _Gloss);</span><br><span class="line">                    o.color = ambient + diffuse + specular;</span><br><span class="line">                    </span><br><span class="line">                    </span><br><span class="line">                    <span class="keyword">return</span> fixed4(i.color, <span class="number">1.0</span>);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            ENDCG</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    Fallback <span class="string">"specular"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/unity/" rel="tag"># unity</a>
+          
+            <a href="/tags/shader/" rel="tag"># shader</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/20/unity-shader-variables/" rel="next" title="unity-shader-variables">
+                <i class="fa fa-chevron-left"></i> unity-shader-variables
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/22/unity-shader-texture/" rel="prev" title="unity-shader-texture">
+                unity-shader-texture <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Jiaq</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#光"><span class="nav-number">1.</span> <span class="nav-text">光</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#吸收absorption"><span class="nav-number">1.1.</span> <span class="nav-text">吸收absorption</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#散射scattering"><span class="nav-number">1.2.</span> <span class="nav-text">散射scattering</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#出射度"><span class="nav-number">1.3.</span> <span class="nav-text">出射度</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#标准光照模型"><span class="nav-number">2.</span> <span class="nav-text">标准光照模型</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Phong模型泊松模型"><span class="nav-number">2.1.</span> <span class="nav-text">Phong模型泊松模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Blinn模型"><span class="nav-number">2.2.</span> <span class="nav-text">Blinn模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#半兰伯特模型"><span class="nav-number">2.3.</span> <span class="nav-text">半兰伯特模型</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiaq</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=732200829";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

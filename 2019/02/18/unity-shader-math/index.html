@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="unity,shader,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="坐标系模型空间和世界空间使用的坐标系：左手坐标系。 右侧right 上侧up 前侧forward分别对应了x y z轴正方向。观察空间里的坐标系：是右手坐标系。以摄像机为原点坐标系，摄像机前向是z轴负方向，与模型空间正好相反。 点点是n纬空间的一个位置，没有大小没有宽度$$P = (P_x, P_y) \sqrt(56) \vec{a}\sum{a}\prod{x}\prod_{n=1}^{99}">
+<meta name="keywords" content="unity,shader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="unity shader 线性代数">
+<meta property="og:url" content="http://blogs.jiaqiang.fun/2019/02/18/unity-shader-math/index.html">
+<meta property="og:site_name" content="不积跬步无以至千里">
+<meta property="og:description" content="坐标系模型空间和世界空间使用的坐标系：左手坐标系。 右侧right 上侧up 前侧forward分别对应了x y z轴正方向。观察空间里的坐标系：是右手坐标系。以摄像机为原点坐标系，摄像机前向是z轴负方向，与模型空间正好相反。 点点是n纬空间的一个位置，没有大小没有宽度$$P = (P_x, P_y) \sqrt(56) \vec{a}\sum{a}\prod{x}\prod_{n=1}^{99}">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-03-14T21:32:22.713Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="unity shader 线性代数">
+<meta name="twitter:description" content="坐标系模型空间和世界空间使用的坐标系：左手坐标系。 右侧right 上侧up 前侧forward分别对应了x y z轴正方向。观察空间里的坐标系：是右手坐标系。以摄像机为原点坐标系，摄像机前向是z轴负方向，与模型空间正好相反。 点点是n纬空间的一个位置，没有大小没有宽度$$P = (P_x, P_y) \sqrt(56) \vec{a}\sum{a}\prod{x}\prod_{n=1}^{99}">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blogs.jiaqiang.fun/2019/02/18/unity-shader-math/">
+
+
+
+
+
+  <title>unity shader 线性代数 | 不积跬步无以至千里</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不积跬步无以至千里</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blogs.jiaqiang.fun/2019/02/18/unity-shader-math/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiaq">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不积跬步无以至千里">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">unity shader 线性代数</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-18T16:21:01+08:00">
+                2019-02-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h5 id="坐标系"><a href="#坐标系" class="headerlink" title="坐标系"></a>坐标系</h5><p>模型空间和世界空间使用的坐标系：左手坐标系。 右侧right 上侧up 前侧forward分别对应了x y z轴正方向。<br>观察空间里的坐标系：是右手坐标系。以摄像机为原点坐标系，摄像机前向是z轴负方向，与模型空间正好相反。</p>
+<h5 id="点"><a href="#点" class="headerlink" title="点"></a>点</h5><p>点是n纬空间的一个位置，没有大小没有宽度<br>$$<br>P = (P_x, P_y) \sqrt(56) \vec{a}\sum{a}\prod{x}\prod_{n=1}^{99}{x_n}\sin{x}<br>$$</p>
+<h5 id="矢量Vector也叫向量"><a href="#矢量Vector也叫向量" class="headerlink" title="矢量Vector也叫向量"></a>矢量Vector也叫向量</h5><h5 id="标量"><a href="#标量" class="headerlink" title="标量"></a>标量</h5><h5 id="模"><a href="#模" class="headerlink" title="模"></a>模</h5><h5 id="方向"><a href="#方向" class="headerlink" title="方向"></a>方向</h5><p>标量只有模没有方向，向量既有模又有方向<br>点是没有大小的一个位置，矢量是一个有模和方向的但没有位置的的量。<br>矢量描述的是位置偏移</p>
+<h5 id="矢量的模"><a href="#矢量的模" class="headerlink" title="矢量的模"></a>矢量的模</h5><p>$$<br>|v| = \sqrt(v_x^2+v_y^2+v_z^2)<br>$$</p>
+<p>$$<br>|(1,2,3)| = \sqrt(1^2 + 2^2 + 3^2)=\sqrt(1+4+9)=\sqrt(14)<br>$$</p>
+<p>#####单位矢量</p>
+<p>指的是模为1的矢量，也叫被归一化的矢量normalized vector，归一化过程normalization<br>$\vec(v)=v/|v|$,v是非零矢量</p>
+<h5 id="矢量的点积"><a href="#矢量的点积" class="headerlink" title="矢量的点积"></a>矢量的点积</h5><p>点积描述的是两个矢量的方向是否一致，$a·b=(a_x, a_y, a_z) · (b_x, b_y, b_z))=a_xb_x+a_yb_y+a_zb_z$<br>两个矢量的点积等于他们之间夹角的余弦值$\theta=arcos(\vec(a), \vec(b))$<br>夹角小于90度方向一致，夹角等于90度方向垂直，夹角大于90度方向相反</p>
+<p>#####矢量的叉乘，外积</p>
+<p>$a \times b=(a_x, a_y, a_z)\times(b_x, b_y, b_z) = (a_yb_z-a_zb_y,  a_xb_z-a_zb_x,  a_xb_y-a_yb_x)$</p>
+<p>$|a \times b| = |a||b|sin\theta$</p>
+<p>几何意义:计算垂直于一个平面、三角形的矢量，可用于判断三角面的朝向</p>
+<h5 id="矩阵"><a href="#矩阵" class="headerlink" title="矩阵"></a>矩阵</h5><p>$$<br>M = \begin{bmatrix}<br>m_{11} &amp; m_{12} &amp; m_{13}\<br>m_{21} &amp; m_{22} &amp; m_{23}\<br>m_{31} &amp; m_{32} &amp; m_{33}<br>\end{bmatrix} \tag{4}<br>$$</p>
+<p>M_{ij}表示这个元素在矩阵M的第i行，第j列</p>
+<h5 id="行矩阵"><a href="#行矩阵" class="headerlink" title="行矩阵"></a>行矩阵</h5><p>只有一行的矩阵    $ \begin{bmatrix} 1 &amp; 2 &amp; 3 \end{bmatrix}​$</p>
+<h5 id="列矩阵"><a href="#列矩阵" class="headerlink" title="列矩阵"></a>列矩阵</h5><p>只有一列的矩阵  $ \begin{Bmatrix} 1 \ 2 \ 3 \end{Bmatrix}$</p>
+<h5 id="方块矩阵"><a href="#方块矩阵" class="headerlink" title="方块矩阵"></a>方块矩阵</h5><p>行数和列数相等的矩阵</p>
+<h5 id="对角矩阵"><a href="#对角矩阵" class="headerlink" title="对角矩阵"></a>对角矩阵</h5><p>如果一个矩阵除了对角元素崴的所有元素都为0，那么这个矩阵就叫做对角矩阵</p>
+<h5 id="单位矩阵"><a href="#单位矩阵" class="headerlink" title="单位矩阵"></a>单位矩阵</h5><p>任何矩阵和它相乘的结果还是原来的矩阵 $MI=IM=M​$, 那么这个矩阵就是单位矩阵跟标量中的1一个意思</p>
+<h5 id="转置矩阵"><a href="#转置矩阵" class="headerlink" title="转置矩阵"></a>转置矩阵</h5><p>原来矩阵的第i行变成新矩阵的第i列，而第j列变成新矩阵的第j行$M_{ij}^T = M_{ji}​$</p>
+<ul>
+<li><p>矩阵转置的转置等于原矩阵 $(M^T)^T=M$</p>
+</li>
+<li><p>矩阵串接的转置等于反向串接各个矩阵的转置$(AB)^T=B^TA^T$</p>
+</li>
+</ul>
+<h5 id="逆矩阵"><a href="#逆矩阵" class="headerlink" title="逆矩阵"></a>逆矩阵</h5><p>如果一个方阵M，它的逆矩阵$M^{-1}$ 来表示，如果$MM^{-1}= M^{-1}M=I$<br>则说明这个矩阵是可逆的（invertible）是非奇异的（nonsingular），如果一个矩阵没有对应的逆矩阵，则说明他是不可逆的(noninvertible)或者是奇异的singular<br>如何判断一个矩阵是否是可逆的呢？简单的来说就是一个矩阵的行列式（determinant）不为0<br>特性：</p>
+<ul>
+<li><p>逆矩阵的逆矩阵是原矩阵本身</p>
+</li>
+<li><p>单位矩阵的逆矩阵是它本身</p>
+</li>
+<li><p>转置矩阵的逆矩阵是逆矩阵的转置${(M^T)}^{-1}=(M^{-1})^T)$</p>
+</li>
+<li><p>矩阵串接相乘后的逆矩阵等于反向串接各个矩阵的逆矩阵$(AB)^{-1}=B^{-1}A^{-1}$</p>
+</li>
+</ul>
+<p>几何意义是允许变换的反向变换</p>
+<h5 id="正交矩阵"><a href="#正交矩阵" class="headerlink" title="正交矩阵"></a>正交矩阵</h5><p>如果一个方阵M和它的转置矩阵$M^T$相乘的乘积为单位矩阵的话，那么说明这个矩阵是正交的(orthogonal)<br>$$<br>MM^T=M^TM=I<br>$$<br> 如果一个矩阵是正交的那么它的转置矩阵和逆矩阵是一样的也就是 $M^T=M^{-1}$</p>
+<p>几何意义：在进行反向变换时候需要逆矩阵，而逆矩阵非常难求，所以如果是正交矩阵的话那么他的逆矩阵求解就非常简单了就是他的转置矩阵。</p>
+<p>如何判断是否有正交矩阵呢：</p>
+<ul>
+<li>矩阵的每一行是单位矢量，因为只有单位矢量与自己的点积才是1</li>
+<li>矩阵的每一行c1 c2 c3互相垂直，因为只有这样他们之间互相点积才等于0</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/unity/" rel="tag"># unity</a>
+          
+            <a href="/tags/shader/" rel="tag"># shader</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/18/unity-shader/" rel="next" title="Unity Shader基础">
+                <i class="fa fa-chevron-left"></i> Unity Shader基础
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/19/unity-shader-matrix/" rel="prev" title="矩阵的几何意义">
+                矩阵的几何意义 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Jiaq</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#坐标系"><span class="nav-number">1.</span> <span class="nav-text">坐标系</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#点"><span class="nav-number">2.</span> <span class="nav-text">点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#矢量Vector也叫向量"><span class="nav-number">3.</span> <span class="nav-text">矢量Vector也叫向量</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#标量"><span class="nav-number">4.</span> <span class="nav-text">标量</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#模"><span class="nav-number">5.</span> <span class="nav-text">模</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#方向"><span class="nav-number">6.</span> <span class="nav-text">方向</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#矢量的模"><span class="nav-number">7.</span> <span class="nav-text">矢量的模</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#矢量的点积"><span class="nav-number">8.</span> <span class="nav-text">矢量的点积</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#矩阵"><span class="nav-number">9.</span> <span class="nav-text">矩阵</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#行矩阵"><span class="nav-number">10.</span> <span class="nav-text">行矩阵</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#列矩阵"><span class="nav-number">11.</span> <span class="nav-text">列矩阵</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#方块矩阵"><span class="nav-number">12.</span> <span class="nav-text">方块矩阵</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#对角矩阵"><span class="nav-number">13.</span> <span class="nav-text">对角矩阵</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#单位矩阵"><span class="nav-number">14.</span> <span class="nav-text">单位矩阵</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#转置矩阵"><span class="nav-number">15.</span> <span class="nav-text">转置矩阵</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#逆矩阵"><span class="nav-number">16.</span> <span class="nav-text">逆矩阵</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#正交矩阵"><span class="nav-number">17.</span> <span class="nav-text">正交矩阵</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiaq</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=732200829";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

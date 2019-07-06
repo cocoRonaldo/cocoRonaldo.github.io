@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="unity,shader,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="凹凸映射凹凸映射的目的是使用一张纹理来修改模型表面的法线，让模型看起来凹凸不平。 高度纹理存储的是强度值，它用于表示模型表面局部的海拔高度，颜色越浅表明该位置的表面越向外凸起，颜色越深表明该位置越向里凹，可以很直观的从高度图里明确的知道一个模型表面的凹凸情况。缺点是计算更加复杂，在实时计算中不能直接得到表面法线，而需要由像素的灰度值计算而得，需要消耗很多性能。 #####法线纹理 存储的是表面的法">
+<meta name="keywords" content="unity,shader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="unity 凹凸映射">
+<meta property="og:url" content="http://blogs.jiaqiang.fun/2019/02/25/unity-shader-bump/index.html">
+<meta property="og:site_name" content="不积跬步无以至千里">
+<meta property="og:description" content="凹凸映射凹凸映射的目的是使用一张纹理来修改模型表面的法线，让模型看起来凹凸不平。 高度纹理存储的是强度值，它用于表示模型表面局部的海拔高度，颜色越浅表明该位置的表面越向外凸起，颜色越深表明该位置越向里凹，可以很直观的从高度图里明确的知道一个模型表面的凹凸情况。缺点是计算更加复杂，在实时计算中不能直接得到表面法线，而需要由像素的灰度值计算而得，需要消耗很多性能。 #####法线纹理 存储的是表面的法">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-03-14T21:32:22.713Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="unity 凹凸映射">
+<meta name="twitter:description" content="凹凸映射凹凸映射的目的是使用一张纹理来修改模型表面的法线，让模型看起来凹凸不平。 高度纹理存储的是强度值，它用于表示模型表面局部的海拔高度，颜色越浅表明该位置的表面越向外凸起，颜色越深表明该位置越向里凹，可以很直观的从高度图里明确的知道一个模型表面的凹凸情况。缺点是计算更加复杂，在实时计算中不能直接得到表面法线，而需要由像素的灰度值计算而得，需要消耗很多性能。 #####法线纹理 存储的是表面的法">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blogs.jiaqiang.fun/2019/02/25/unity-shader-bump/">
+
+
+
+
+
+  <title>unity 凹凸映射 | 不积跬步无以至千里</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不积跬步无以至千里</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blogs.jiaqiang.fun/2019/02/25/unity-shader-bump/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiaq">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不积跬步无以至千里">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">unity 凹凸映射</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-25T09:46:57+08:00">
+                2019-02-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h5 id="凹凸映射"><a href="#凹凸映射" class="headerlink" title="凹凸映射"></a>凹凸映射</h5><p>凹凸映射的目的是使用一张纹理来修改模型表面的法线，让模型看起来凹凸不平。</p>
+<h5 id="高度纹理"><a href="#高度纹理" class="headerlink" title="高度纹理"></a>高度纹理</h5><p>存储的是强度值，它用于表示模型表面局部的海拔高度，颜色越浅表明该位置的表面越向外凸起，颜色越深表明该位置越向里凹，可以很直观的从高度图里明确的知道一个模型表面的凹凸情况。缺点是计算更加复杂，在实时计算中不能直接得到表面法线，而需要由像素的灰度值计算而得，需要消耗很多性能。</p>
+<p>#####法线纹理</p>
+<p>存储的是表面的法线方向，由于法线方向的分量范围在[-1, 1],而像素的分布范围是[0,1]因此需要做一个映射，pixel=（normal + 1)/2 反映射的过程就是norma=pixel x 2 - 1</p>
+<h5 id="模型空间的法线纹理"><a href="#模型空间的法线纹理" class="headerlink" title="模型空间的法线纹理"></a>模型空间的法线纹理</h5><p>修改后的模型空间中的表面法线存储在一张纹理中，按照模型自带的坐标空间，模型空间<br>由于每个点存储的法线方向是各异的，所以看起来是<strong>五颜六色</strong>的。<br>优点：</p>
+<ul>
+<li>实现简单，更加直观</li>
+<li>在纹理坐标的缝合处和尖锐的边角部分，可见的缝隙较少，可以提供平滑的边界</li>
+</ul>
+<h5 id="切线空间的法线纹理"><a href="#切线空间的法线纹理" class="headerlink" title="切线空间的法线纹理"></a>切线空间的法线纹理</h5><p>对于模型的每一个顶点，它都有一个属于自己的切线空间，这个切线空间的原点就是该顶点本身，z轴是顶点的法线方向(n), x轴是顶点的切线方向(t)，y轴可由法线和切线叉乘得到，也被称为副切线b。<br>切线空间下的法线纹理看起来几乎都是浅蓝色的，纹理其实是存储了各自的切线空间中的法线扰动方向。如果一个点的法线方向不变，那么在它的切线空间中，新的法线方向就是z轴方向(0,0,1)经过映射后存储在纹理中RGB(0.5,0.5,1)为浅蓝色。所以切线空间下的法线纹理看起来是一大片<strong>浅蓝色</strong>的</p>
+<p>优点：</p>
+<ul>
+<li>自由度高。可以用在别的网格中。</li>
+<li>可以进行UV动画。可以移动一个纹理的UV坐标来实现一个凹凸移动的效果</li>
+<li>可以重用法线纹理。比如一个砖块可以用一张法线纹理就可以用到所有的6个面上</li>
+<li>可压缩。z总是法线方向，因此可以只存储xy方向的值。</li>
+</ul>
+<p>#####Shader实现</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">Shader &quot;My/bump&quot;&#123;</span><br><span class="line">    Properties&#123;</span><br><span class="line">    	_Color(&quot;Color&quot;, Color)           = (1,1,1,1)</span><br><span class="line">        _MainTex(&quot;MainTex&quot;, 2D)          = &quot;white&quot;&#123;&#125;</span><br><span class="line">        _BumpMap(&quot;Normal Map&quot;, 2D)       = &quot;bump&quot; &#123;&#125;</span><br><span class="line">        _BumpScale(&quot;Bump Scale&quot;, Float)  = 1.0</span><br><span class="line">		_Specular(&quot;Specular&quot;, Color)     = (1,1,1,1)</span><br><span class="line">        _Gloss(&quot;Gloss&quot;, Range(8.0, 256)) = 20</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    SubShader&#123;</span><br><span class="line">        Pass&#123;</span><br><span class="line">            Tag &#123; &quot;LightMode&quot;=&quot;ForwardBase&quot; &#125;</span><br><span class="line">            CGPROGRAM</span><br><span class="line">            #pragma vertex vert</span><br><span class="line">            #pragma fragment frag</span><br><span class="line">            #include &quot;Lighting.cginc&quot;</span><br><span class="line">            fixed4 _Color;</span><br><span class="line">            sampler2D _MainTex;</span><br><span class="line">            float4 _MainTex_ST;</span><br><span class="line">            sampler2D _BumpMap;</span><br><span class="line">            float4 _BumpMap_ST;</span><br><span class="line">            float  _BumpScale;</span><br><span class="line">            fixed4 _Specular;</span><br><span class="line">            float  _Gloss;</span><br><span class="line">            </span><br><span class="line">            struct a2v&#123;</span><br><span class="line">                float4 vertex 	: POSITION;</span><br><span class="line">                float3 normal 	: NORMAL;</span><br><span class="line">                float4 tagent 	: TANGENT; //xyzw w来确定第三个坐标轴的副切线方向性</span><br><span class="line">                float4 texcoord : TEXCOORD0;</span><br><span class="line">            &#125;;</span><br><span class="line">            struct v2f&#123;</span><br><span class="line">            	float4 pos  : SV_POSITION;</span><br><span class="line">                float4 uv   : TEXCOORD0;</span><br><span class="line">                float3 lightDir : TEXCOORD1;</span><br><span class="line">                float3 viewDir  : TEXCOORD2;</span><br><span class="line">            &#125;;</span><br><span class="line">            </span><br><span class="line">            v2f vert(a2v v)&#123;</span><br><span class="line">                v2f o;</span><br><span class="line">                o.pos = mul(UNITY_MATRIX_MVP, v.vertex);</span><br><span class="line">                o.uv.xy = v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw;</span><br><span class="line">                o.uv.zw = v.texcoord.xy * _BumpMap_ST.xy + _BumpMap_ST.zw;</span><br><span class="line">                //转换到切线空间</span><br><span class="line">                TANGENT_SPACE_ROTATION;</span><br><span class="line">                o.lightDir = mul(rotation, ObjSpaceLightDir(v.vertex)).xyz;</span><br><span class="line">                o.viewDir = mul(rotation, ObjSpaceViewDir(v.vertex)).xyz;</span><br><span class="line">                return o;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            fixed4 frag(v2f i) : SV_Target&#123;</span><br><span class="line">                fixed3 tangentLightDir = normalize(i.lightDir);</span><br><span class="line">                fixed3 tagentViewDir   = normalize(i.viewDir);</span><br><span class="line">                </span><br><span class="line">                fixed4 packedNormal = tex2D(_BumpMap, i.uv.zw); //得到的是压缩过的法线</span><br><span class="line">                fixed3 tangentNormal;</span><br><span class="line">                tangentNormal = UnpackNormal(packedNormal);     //得到正确的法线</span><br><span class="line">                tangentNormal.xy *= _BumpScale;</span><br><span class="line">                tangentNormal.z = sqrt(1 - saturate(dot(tangentNormal.xy, 	tangentNormal.xy)));</span><br><span class="line">                fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _Color.rgb;</span><br><span class="line">                fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * albedo;</span><br><span class="line">                fixed3 diffuse = _LightColor0.rgb * albedo * max(0, dot(tangentNormal, tangentLightDir));</span><br><span class="line">                fixed3 halfDir = normalize(tangentLightDir + tangentViewDir);</span><br><span class="line">                fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0, dot(tangentNormal, halfDir)), _Gloss);</span><br><span class="line">                return fixed4(ambient + diffuse + specular, 1.0);</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            ENDCG</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    FallBack &quot;diffuse&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>世界空间下计算光照模型；需要在片元着色器中把法线方向从切线空间变换到世界空间下。<br>在顶点着色器计算从切线空间到世界空间的变换矩阵，并把它传递给片元着色器。变换矩阵的计算可以由顶点的切线、副切线和法线在世界空间下的表示来得到，最后在片元着色器中把法线纹理中的法线方向从切线空间变换到世界空间。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line">Shader &quot;My/NormalMapWorldSpace&quot;&#123;</span><br><span class="line">    Properties&#123;</span><br><span class="line">    	_Color(&quot;Color&quot;, Color)           = (1,1,1,1)</span><br><span class="line">        _MainTex(&quot;MainTex&quot;, 2D)          = &quot;white&quot;&#123;&#125;</span><br><span class="line">        _BumpMap(&quot;Normal Map&quot;, 2D)       = &quot;bump&quot; &#123;&#125;</span><br><span class="line">        _BumpScale(&quot;Bump Scale&quot;, Float)  = 1.0</span><br><span class="line">		_Specular(&quot;Specular&quot;, Color)     = (1,1,1,1)</span><br><span class="line">        _Gloss(&quot;Gloss&quot;, Range(8.0, 256)) = 20</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    SubShader&#123;</span><br><span class="line">        Pass&#123;</span><br><span class="line">            Tag &#123; &quot;LightMode&quot;=&quot;ForwardBase&quot; &#125;</span><br><span class="line">            CGPROGRAM</span><br><span class="line">            #pragma vertex vert</span><br><span class="line">            #pragma fragment frag</span><br><span class="line">            #include &quot;Lighting.cginc&quot;</span><br><span class="line">            fixed4 _Color;</span><br><span class="line">            sampler2D _MainTex;</span><br><span class="line">            float4 _MainTex_ST;</span><br><span class="line">            sampler2D _BumpMap;</span><br><span class="line">            float4 _BumpMap_ST;</span><br><span class="line">            float  _BumpScale;</span><br><span class="line">            fixed4 _Specular;</span><br><span class="line">            float  _Gloss;</span><br><span class="line">            </span><br><span class="line">            struct a2v&#123;</span><br><span class="line">                float4 vertex 	: POSITION;</span><br><span class="line">                float3 normal 	: NORMAL;</span><br><span class="line">                float4 tagent 	: TANGENT; //xyzw w来确定第三个坐标轴的副切线方向性</span><br><span class="line">                float4 texcoord : TEXCOORD0;</span><br><span class="line">            &#125;;</span><br><span class="line">            struct v2f&#123;</span><br><span class="line">            	float4 pos   : SV_POSITION;</span><br><span class="line">                float4 uv    : TEXCOORD0;</span><br><span class="line">               	float4 TtoW0 : TEXCOORD1;</span><br><span class="line">                float4 TtoW1 : TEXCOORD2;</span><br><span class="line">                float4 TtoW2 : TEXCOORD3;</span><br><span class="line">            &#125;;</span><br><span class="line">            </span><br><span class="line">            v2f vert(a2v v)&#123;</span><br><span class="line">                v2f o;</span><br><span class="line">                o.pos = mul(UNITY_MATRIX_MVP, v.vertex);  //剪裁空间</span><br><span class="line">                o.uv.xy = v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw;</span><br><span class="line">                o.uv.zw = v.texcoord.xy * _BumpMap_ST.xy + _BumpMap_ST.zw;</span><br><span class="line">         		float3 worldPos = mul(_Object2World, v.vertex).xyz;</span><br><span class="line">                fixed3 worldNormal = UnityObjectToWorldNormal(v.normal);</span><br><span class="line">                fixed3 worldTangent = UnityObjectToWolrdDir(v.tangent.xyz);</span><br><span class="line">                fixed3 worldBinormal = cross(worldNormal, worldTagent) * v.tangent.w;</span><br><span class="line">                </span><br><span class="line">                o.TtoW0 = float4(worldTangent.x, worldBinormal.x, worldNormal.x, worldPos.x);</span><br><span class="line">                o.TtoW1 = float4(worldTangent.y, worldBinormal.y, worldNormal.y, worldPos.y);</span><br><span class="line">                o.TtoW2 = float4(worldTangent.z, worldBinormal.z, worldNormal.z, worldPos.z);</span><br><span class="line">                return o;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            fixed4 frag(v2f i) : SV_Target&#123;</span><br><span class="line">              	//得到顶点的世界坐标</span><br><span class="line">       			float3 worldPos = float3(i.TtoW0.w, i.TtoW1.w, i.TtoW2.w);</span><br><span class="line">                fixed3 lightDir = normalize(UnityWorldSpaceLightDir(worldPos));</span><br><span class="line">                fixed3 viewDir  = normalize(UnityWorldSpaceViewDir(worldPos));</span><br><span class="line">                </span><br><span class="line">                //得到切线空间的法线</span><br><span class="line">                fixed3 bump = UnpackNormal(tex2D(_BumpMap, i.uv.zw));</span><br><span class="line">                bump.xy *= _BumpScale;</span><br><span class="line">                bump.z = sqrt(1 - saturate(dot(bump.xy, bump.xy)));</span><br><span class="line">                bump = normalize(half3(dot(i.TtoW0.xyz, bump), dot(i.TtoW1.xyz, bump), dot(i.TtoW2.xyz, bump)));</span><br><span class="line">                fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _Color.rgb;</span><br><span class="line">                fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * albedo;</span><br><span class="line">                fixed3 diffuse = _LightColor0.rgb * albedo * max(0, dot(bump, lightDir));</span><br><span class="line">                fixed3 halfDir = normalize(lightDir + viewDir);</span><br><span class="line">                fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0, dot(bump, halfDir)), _Gloss);</span><br><span class="line">                return fixed4(ambient + diffuse + specular, 1.0);</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            ENDCG</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    FallBack &quot;diffuse&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/unity/" rel="tag"># unity</a>
+          
+            <a href="/tags/shader/" rel="tag"># shader</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/22/unity-shader-texture/" rel="next" title="unity-shader-texture">
+                <i class="fa fa-chevron-left"></i> unity-shader-texture
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/25/unity-shader-ramp/" rel="prev" title="unity 渐变纹理">
+                unity 渐变纹理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Jiaq</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#凹凸映射"><span class="nav-number">1.</span> <span class="nav-text">凹凸映射</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#高度纹理"><span class="nav-number">2.</span> <span class="nav-text">高度纹理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#模型空间的法线纹理"><span class="nav-number">3.</span> <span class="nav-text">模型空间的法线纹理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#切线空间的法线纹理"><span class="nav-number">4.</span> <span class="nav-text">切线空间的法线纹理</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiaq</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=732200829";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

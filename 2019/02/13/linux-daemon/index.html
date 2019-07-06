@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="linux,nodejs,tmux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="介绍“守护进程”（daemon）就是一类在后台运行的特殊进程，用于执行特定的系统任务，很多守护进程在系统引导时候启动并一直运行到系统关闭，也有一些在需要时候启动，完成任务后自动结束。 问题一个简单的node server.js 一旦退出命令行窗口，这个应用就一起退出，无法访问了。那么如何才能让他一直运行呢？有以下办法： 办法一 &amp;amp; $ node server.js &amp;amp;只要在命令的尾">
+<meta name="keywords" content="linux,nodejs,tmux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux守护进程">
+<meta property="og:url" content="http://blogs.jiaqiang.fun/2019/02/13/linux-daemon/index.html">
+<meta property="og:site_name" content="不积跬步无以至千里">
+<meta property="og:description" content="介绍“守护进程”（daemon）就是一类在后台运行的特殊进程，用于执行特定的系统任务，很多守护进程在系统引导时候启动并一直运行到系统关闭，也有一些在需要时候启动，完成任务后自动结束。 问题一个简单的node server.js 一旦退出命令行窗口，这个应用就一起退出，无法访问了。那么如何才能让他一直运行呢？有以下办法： 办法一 &amp;amp; $ node server.js &amp;amp;只要在命令的尾">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-03-14T21:32:22.713Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="linux守护进程">
+<meta name="twitter:description" content="介绍“守护进程”（daemon）就是一类在后台运行的特殊进程，用于执行特定的系统任务，很多守护进程在系统引导时候启动并一直运行到系统关闭，也有一些在需要时候启动，完成任务后自动结束。 问题一个简单的node server.js 一旦退出命令行窗口，这个应用就一起退出，无法访问了。那么如何才能让他一直运行呢？有以下办法： 办法一 &amp;amp; $ node server.js &amp;amp;只要在命令的尾">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blogs.jiaqiang.fun/2019/02/13/linux-daemon/">
+
+
+
+
+
+  <title>linux守护进程 | 不积跬步无以至千里</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不积跬步无以至千里</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blogs.jiaqiang.fun/2019/02/13/linux-daemon/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiaq">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不积跬步无以至千里">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">linux守护进程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-13T16:05:29+08:00">
+                2019-02-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h6 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h6><p><a href="http://baike.baidu.com/view/53123.htm" target="_blank" rel="noopener">“守护进程”</a>（daemon）就是一类在后台运行的特殊进程，用于执行特定的系统任务，很多守护进程在系统引导时候启动并一直运行到系统关闭，也有一些在需要时候启动，完成任务后自动结束。</p>
+<h5 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h5><p>一个简单的node server.js 一旦退出命令行窗口，这个应用就一起退出，无法访问了。那么如何才能让他一直运行呢？有以下办法：</p>
+<h5 id="办法一-amp"><a href="#办法一-amp" class="headerlink" title="办法一 &amp;"></a>办法一 &amp;</h5><blockquote>
+<p>$ node server.js &amp;<br>只要在命令的尾部加上符号<code>&amp;</code>，启动的进程就会成为”后台任务”。</p>
+</blockquote>
+<h5 id="办法二-sighup信号-disown"><a href="#办法二-sighup信号-disown" class="headerlink" title="办法二  sighup信号 disown"></a>办法二  sighup信号 disown</h5><blockquote>
+<p>todo</p>
+</blockquote>
+<h5 id="办法三-nohup命令"><a href="#办法三-nohup命令" class="headerlink" title="办法三 nohup命令"></a>办法三 nohup命令</h5><blockquote>
+<p>nohup node server.js $</p>
+</blockquote>
+<p>nodup命令做了三件事:<br>1.阻止sighup信号发到这个进程<br>2.关闭标准输入<br>3.重定向标准输出和标准错误到文件nohup.out</p>
+<h5 id="办法四-screen命令和tmux命令"><a href="#办法四-screen命令和tmux命令" class="headerlink" title="办法四 screen命令和tmux命令"></a>办法四 screen命令和tmux命令</h5><p>终端复用器 terminal multiplexer ：在同一个终端里，管理多个session典型的就是screen和tmux</p>
+<p>screen用法</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#新建一个session</span></span><br><span class="line">$ screen</span><br><span class="line">$ node server.js</span><br><span class="line"></span><br><span class="line">$ screen -S name</span><br><span class="line"></span><br><span class="line"><span class="comment"># 切回指定 session</span></span><br><span class="line">$ screen -r name</span><br><span class="line">$ screen -r pid_number</span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出所有 session</span></span><br><span class="line">$ screen -ls</span><br></pre></td></tr></table></figure>
+<p>tmux用法</p>
+  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">#Debian系和Ubuntu：</span></span><br><span class="line">sudo apt install tmux</span><br><span class="line"><span class="comment">#Redhat系包括CentOS</span></span><br><span class="line">yum install -y tmux</span><br><span class="line"><span class="comment">#在macOS上安装Tmux</span></span><br><span class="line">brew install tmux</span><br><span class="line"><span class="comment">#启动新session：</span></span><br><span class="line">$ tmux [new -s 会话名 -n 窗口名]</span><br><span class="line"></span><br><span class="line"><span class="comment">#恢复session：</span></span><br><span class="line">$ tmux at [-t 会话名]</span><br><span class="line"></span><br><span class="line"><span class="comment">#列出所有sessions：</span></span><br><span class="line">$ tmux ls</span><br><span class="line"></span><br><span class="line"><span class="comment">#重新命名会话sessions：</span></span><br><span class="line">$ tmux rename -t oldName newName</span><br><span class="line"></span><br><span class="line"><span class="comment">#关闭session：</span></span><br><span class="line">$ tmux <span class="built_in">kill</span>-session -t 会话名</span><br><span class="line"></span><br><span class="line"><span class="comment">#关闭整个tmux服务器：</span></span><br><span class="line">$ tmux <span class="built_in">kill</span>-server</span><br></pre></td></tr></table></figure>
+<h5 id="办法五-Node工具"><a href="#办法五-Node工具" class="headerlink" title="办法五 Node工具"></a>办法五 Node工具</h5><p>针对node有一些专门的启动工具：：<a href="https://github.com/foreverjs/forever" target="_blank" rel="noopener">forever</a>，<a href="http://nodemon.io/" target="_blank" rel="noopener">nodemon</a> 和 <a href="http://pm2.keymetrics.io/" target="_blank" rel="noopener">pm2</a>。<br>forever 保证进程退出时，应用会自动重启。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 作为前台任务启动</span></span><br><span class="line">$ forever server.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># 作为服务进程启动 </span></span><br><span class="line">$ forever start app.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># 停止服务进程</span></span><br><span class="line">$ forever stop Id</span><br><span class="line"></span><br><span class="line"><span class="comment"># 重启服务进程</span></span><br><span class="line">$ forever restart Id</span><br><span class="line"></span><br><span class="line"><span class="comment"># 监视当前目录的文件变动，一有变动就重启</span></span><br><span class="line">$ forever -w server.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># -m 参数指定最多重启次数</span></span><br><span class="line">$ forever -m 5 server.js </span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出所有进程</span></span><br><span class="line">$ forever list</span><br></pre></td></tr></table></figure>
+<p><code>nodemon</code>一般只在开发时使用，它最大的长处在于 watch 功能，一旦文件发生变化，就自动重启进程。</p>
+<blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment"># 默认监视当前目录的文件变化</span></span><br><span class="line">&gt; $ nodemon server.js</span><br><span class="line">&gt; </span><br><span class="line">&gt; ＃ 监视指定文件的变化   </span><br><span class="line">&gt; $ nodemon --watch app --watch libs server.js  </span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>pm2 的功能最强大，除了重启进程以外，还能实时收集日志和监控。</p>
+<blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment"># 启动应用</span></span><br><span class="line">&gt; $ pm2 start app.js</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 指定同时起多少个进程（由CPU核心数决定），组成一个集群</span></span><br><span class="line">&gt; $ pm2 start app.js -i max</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 列出所有任务</span></span><br><span class="line">&gt; $ pm2 list</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 停止指定任务</span></span><br><span class="line">&gt; $ pm2 stop 0</span><br><span class="line">&gt; </span><br><span class="line">&gt; ＃ 重启指定任务</span><br><span class="line">&gt; $ pm2 restart 0</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 删除指定任务</span></span><br><span class="line">&gt; $ pm2 delete 0</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 保存当前的所有任务，以后可以恢复</span></span><br><span class="line">&gt; $ pm2 save</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 列出每个进程的统计数据</span></span><br><span class="line">&gt; $ pm2 monit</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 查看所有日志</span></span><br><span class="line">&gt; $ pm2 logs</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 导出数据</span></span><br><span class="line">&gt; $ pm2 dump</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 重启所有进程</span></span><br><span class="line">&gt; $ pm2 <span class="built_in">kill</span></span><br><span class="line">&gt; $ pm2 resurect</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 启动web界面 http://localhost:9615</span></span><br><span class="line">&gt; $ pm2 web</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<h5 id="办法六-Systemd"><a href="#办法六-Systemd" class="headerlink" title="办法六 Systemd"></a>办法六 Systemd</h5><p>为系统的启动和管理提供一套完整的解决方案，d就是守护daemon的意思，它守护整个系统，替代initd<br>优点是功能强大 缺点是体系庞大太复杂。</p>
+<p>systemctl是主命令，用于管理系统</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 重启系统</span></span><br><span class="line">$ sudo systemctl reboot</span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭系统，切断电源</span></span><br><span class="line">$ sudo systemctl poweroff</span><br><span class="line"></span><br><span class="line"><span class="comment"># CPU停止工作</span></span><br><span class="line">$ sudo systemctl halt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 暂停系统</span></span><br><span class="line">$ sudo systemctl <span class="built_in">suspend</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 让系统进入冬眠状态</span></span><br><span class="line">$ sudo systemctl hibernate</span><br><span class="line"></span><br><span class="line"><span class="comment"># 让系统进入交互式休眠状态</span></span><br><span class="line">$ sudo systemctl hybrid-sleep</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动进入救援状态（单用户状态）</span></span><br><span class="line">$ sudo systemctl rescue</span><br></pre></td></tr></table></figure>
+<p><code>systemd-analyze</code>命令用于查看启动耗时</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看启动耗时</span></span><br><span class="line">$ systemd-analyze                                                                                       </span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看每个服务的启动耗时</span></span><br><span class="line">$ systemd-analyze blame</span><br><span class="line"></span><br><span class="line"><span class="comment"># 显示瀑布状的启动过程流</span></span><br><span class="line">$ systemd-analyze critical-chain</span><br><span class="line"></span><br><span class="line"><span class="comment"># 显示指定服务的启动流</span></span><br><span class="line">$ systemd-analyze critical-chain atd.service</span><br></pre></td></tr></table></figure>
+<p><code>hostnamectl</code>命令用于查看当前主机的信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 显示当前主机的信息</span></span><br><span class="line">$ hostnamectl</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置主机名。</span></span><br><span class="line">$ sudo hostnamectl <span class="built_in">set</span>-hostname rhel7</span><br></pre></td></tr></table></figure>
+<p>unit管理</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 立即启动一个服务</span></span><br><span class="line">$ sudo systemctl start apache.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 立即停止一个服务</span></span><br><span class="line">$ sudo systemctl stop apache.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 重启一个服务</span></span><br><span class="line">$ sudo systemctl restart apache.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 杀死一个服务的所有子进程</span></span><br><span class="line">$ sudo systemctl <span class="built_in">kill</span> apache.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 重新加载一个服务的配置文件</span></span><br><span class="line">$ sudo systemctl reload apache.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 重载所有修改过的配置文件</span></span><br><span class="line">$ sudo systemctl daemon-reload</span><br><span class="line"></span><br><span class="line"><span class="comment"># 显示某个 Unit 的所有底层参数</span></span><br><span class="line">$ systemctl show httpd.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 显示某个 Unit 的指定属性的值</span></span><br><span class="line">$ systemctl show -p CPUShares httpd.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置某个 Unit 的指定属性</span></span><br><span class="line">$ sudo systemctl <span class="built_in">set</span>-property httpd.service CPUShares=500</span><br></pre></td></tr></table></figure>
+<h6 id="参考网站"><a href="#参考网站" class="headerlink" title="参考网站"></a>参考网站</h6><p><a href="http://blog.jobbole.com/87278/" target="_blank" rel="noopener">Tmux入门介绍</a><br><a href="https://www.cnblogs.com/0616--ataozhijia/p/8037887.html" target="_blank" rel="noopener">Linux 守护进程的启动方法</a><br><a href="http://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html" target="_blank" rel="noopener">Systemd命令</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/linux/" rel="tag"># linux</a>
+          
+            <a href="/tags/nodejs/" rel="tag"># nodejs</a>
+          
+            <a href="/tags/tmux/" rel="tag"># tmux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/13/hexo-note/" rel="next" title="hexo命令备忘">
+                <i class="fa fa-chevron-left"></i> hexo命令备忘
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/18/unity-shader/" rel="prev" title="Unity Shader基础">
+                Unity Shader基础 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Jiaq</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-6"><a class="nav-link" href="#介绍"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li></ol><li class="nav-item nav-level-5"><a class="nav-link" href="#问题"><span class="nav-number"></span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#办法一-amp"><span class="nav-number"></span> <span class="nav-text">办法一 &amp;</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#办法二-sighup信号-disown"><span class="nav-number"></span> <span class="nav-text">办法二  sighup信号 disown</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#办法三-nohup命令"><span class="nav-number"></span> <span class="nav-text">办法三 nohup命令</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#办法四-screen命令和tmux命令"><span class="nav-number"></span> <span class="nav-text">办法四 screen命令和tmux命令</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#办法五-Node工具"><span class="nav-number"></span> <span class="nav-text">办法五 Node工具</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#办法六-Systemd"><span class="nav-number"></span> <span class="nav-text">办法六 Systemd</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#参考网站"><span class="nav-number">1.</span> <span class="nav-text">参考网站</span></a></li></ol></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiaq</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=732200829";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

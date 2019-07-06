@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="unity,shader,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="阶段 应用阶段 由cpu实现，准备好场景数据，摄像机位置，视椎体，场景模型，光源 粒度剔除将不可见物体剔除 设置渲染状态 材质 纹理 使用的shader 输出渲染图元(点线三角面等)   几何阶段 GPU完成 顶点着色器 和每个渲染图元打交道，逐顶点，逐多边形操作，把顶点坐标变换到屏幕空间中，再交给光栅器处理 输出屏幕空间的二维顶点坐标，每个顶点的深度值，着色信息等   光栅化阶段 产生屏幕像素">
+<meta name="keywords" content="unity,shader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="渲染流水线">
+<meta property="og:url" content="http://blogs.jiaqiang.fun/2019/02/11/unity-shader-render/index.html">
+<meta property="og:site_name" content="不积跬步无以至千里">
+<meta property="og:description" content="阶段 应用阶段 由cpu实现，准备好场景数据，摄像机位置，视椎体，场景模型，光源 粒度剔除将不可见物体剔除 设置渲染状态 材质 纹理 使用的shader 输出渲染图元(点线三角面等)   几何阶段 GPU完成 顶点着色器 和每个渲染图元打交道，逐顶点，逐多边形操作，把顶点坐标变换到屏幕空间中，再交给光栅器处理 输出屏幕空间的二维顶点坐标，每个顶点的深度值，着色信息等   光栅化阶段 产生屏幕像素">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-03-15T06:34:38.816Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="渲染流水线">
+<meta name="twitter:description" content="阶段 应用阶段 由cpu实现，准备好场景数据，摄像机位置，视椎体，场景模型，光源 粒度剔除将不可见物体剔除 设置渲染状态 材质 纹理 使用的shader 输出渲染图元(点线三角面等)   几何阶段 GPU完成 顶点着色器 和每个渲染图元打交道，逐顶点，逐多边形操作，把顶点坐标变换到屏幕空间中，再交给光栅器处理 输出屏幕空间的二维顶点坐标，每个顶点的深度值，着色信息等   光栅化阶段 产生屏幕像素">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blogs.jiaqiang.fun/2019/02/11/unity-shader-render/">
+
+
+
+
+
+  <title>渲染流水线 | 不积跬步无以至千里</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不积跬步无以至千里</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blogs.jiaqiang.fun/2019/02/11/unity-shader-render/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiaq">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不积跬步无以至千里">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">渲染流水线</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-11T13:55:36+08:00">
+                2019-02-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<h3 id="阶段"><a href="#阶段" class="headerlink" title="阶段"></a>阶段</h3><ul>
+<li><h4 id="应用阶段"><a href="#应用阶段" class="headerlink" title="应用阶段"></a>应用阶段</h4><ol>
+<li>由cpu实现，准备好场景数据，摄像机位置，视椎体，场景模型，光源</li>
+<li>粒度剔除将不可见物体剔除</li>
+<li>设置渲染状态 材质 纹理 使用的shader</li>
+<li>输出渲染图元(点线三角面等)</li>
+</ol>
+</li>
+<li><h4 id="几何阶段"><a href="#几何阶段" class="headerlink" title="几何阶段"></a>几何阶段</h4><ol>
+<li>GPU完成</li>
+<li>顶点着色器</li>
+<li>和每个渲染图元打交道，逐顶点，逐多边形操作，把顶点坐标变换到屏幕空间中，再交给光栅器处理</li>
+<li>输出屏幕空间的二维顶点坐标，每个顶点的深度值，着色信息等</li>
+</ol>
+</li>
+<li><h4 id="光栅化阶段"><a href="#光栅化阶段" class="headerlink" title="光栅化阶段"></a>光栅化阶段</h4><ol>
+<li>产生屏幕像素，渲染最终结果GPU上运行 决定哪些像素应该被绘制在屏幕上</li>
+<li>需要对上一阶段得到的逐顶点数据纹理坐标颜色等进行插值然后再进行逐像素处理</li>
+<li>三角形设置 三角形遍历 片元着色器</li>
+</ol>
+</li>
+</ul>
+<h5 id="顶点着色器"><a href="#顶点着色器" class="headerlink" title="顶点着色器"></a>顶点着色器</h5><h5 id="片元着色器"><a href="#片元着色器" class="headerlink" title="片元着色器"></a>片元着色器</h5><p>输入：上一个阶段对顶点信息插值得到的结果<br>输出：一个或多个颜色值<br>根据顶点信息通过某些技术比如纹理采样等生成片元信息颜色值等</p>
+<h5 id="三角形设置"><a href="#三角形设置" class="headerlink" title="三角形设置"></a>三角形设置</h5><p>计算光栅化网格所需要的信息，通过顶点得到整个三角形对像素的覆盖情况，计算一个三角网格表示数据的过程是三角形设置</p>
+<h5 id="三角形遍历"><a href="#三角形遍历" class="headerlink" title="三角形遍历"></a>三角形遍历</h5><p>判断三角网格覆盖了哪些像素，对应像素生成一个片元，片元状态（屏幕坐标，深度信息，顶点信息如法线纹理坐标等）是对3个顶点信息进行插值得到的。</p>
+<h5 id="逐片元操作"><a href="#逐片元操作" class="headerlink" title="逐片元操作"></a>逐片元操作</h5><p>通过了所有测试后，新生成的片元才能和颜色缓冲区中已经存在的像素颜色进行混合，最后再写入到颜色缓冲区</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">A[片元]--&gt;B&#123;模板测试&#125;</span><br><span class="line">B--&gt;|测试通过|C&#123;深度测试&#125;</span><br><span class="line">C--&gt;|测试通过|D[混合]</span><br><span class="line">D--&gt;E[颜色缓冲区]</span><br></pre></td></tr></table></figure>
+<p>流程图</p>
+<div id="flowchart-0" class="flow-chart"></div>
+
+<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: 顶点数据
+
+op1=>operation: 顶点着色器
+op2=>operation: 曲面着色器
+op3=>operation: 几何着色器
+op4=>operation: 剪裁
+op5=>operation: 屏幕映射
+
+op6=>operation: 三角形设置
+op7=>operation: 三角形遍历
+op8=>operation: 片元着色器
+op9=>operation: 逐片元操作
+e=>end: 屏幕图像
+
+st(right)->op1(right)->op2(right)->op3(right)->op4(right)->op5
+op5->op6->op7->op8->op9
+op9(right)->e</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/unity/" rel="tag"># unity</a>
+          
+            <a href="/tags/shader/" rel="tag"># shader</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/16/typora用法/" rel="next" title="typora用法">
+                <i class="fa fa-chevron-left"></i> typora用法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/13/hexo-note/" rel="prev" title="hexo命令备忘">
+                hexo命令备忘 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Jiaq</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#阶段"><span class="nav-number">1.</span> <span class="nav-text">阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#应用阶段"><span class="nav-number">1.1.</span> <span class="nav-text">应用阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#几何阶段"><span class="nav-number">1.2.</span> <span class="nav-text">几何阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#光栅化阶段"><span class="nav-number">1.3.</span> <span class="nav-text">光栅化阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#顶点着色器"><span class="nav-number">1.3.1.</span> <span class="nav-text">顶点着色器</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#片元着色器"><span class="nav-number">1.3.2.</span> <span class="nav-text">片元着色器</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#三角形设置"><span class="nav-number">1.3.3.</span> <span class="nav-text">三角形设置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#三角形遍历"><span class="nav-number">1.3.4.</span> <span class="nav-text">三角形遍历</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#逐片元操作"><span class="nav-number">1.3.5.</span> <span class="nav-text">逐片元操作</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiaq</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=732200829";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="unity,shader,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="变换transform变换指的是，把一些数据，如点方向矢量颜色等通过一定方式进行转换的过程。 线性变换保留矢量加和标量乘的变换，满足$f(x)+f(y)=f(x+y)$ 和 $kf(x)=f(kx)​$ #####缩放 旋转错切镜像正交投影平移变换平移变换不满足线性变换 仿射变换3x3矩阵不能表示平移操作，所以扩展到了4x4矩阵，成为齐次坐标空间homogeneous space，当使用4x4矩阵">
+<meta name="keywords" content="unity,shader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="矩阵的几何意义">
+<meta property="og:url" content="http://blogs.jiaqiang.fun/2019/02/19/unity-shader-matrix/index.html">
+<meta property="og:site_name" content="不积跬步无以至千里">
+<meta property="og:description" content="变换transform变换指的是，把一些数据，如点方向矢量颜色等通过一定方式进行转换的过程。 线性变换保留矢量加和标量乘的变换，满足$f(x)+f(y)=f(x+y)$ 和 $kf(x)=f(kx)​$ #####缩放 旋转错切镜像正交投影平移变换平移变换不满足线性变换 仿射变换3x3矩阵不能表示平移操作，所以扩展到了4x4矩阵，成为齐次坐标空间homogeneous space，当使用4x4矩阵">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-03-14T21:32:22.713Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="矩阵的几何意义">
+<meta name="twitter:description" content="变换transform变换指的是，把一些数据，如点方向矢量颜色等通过一定方式进行转换的过程。 线性变换保留矢量加和标量乘的变换，满足$f(x)+f(y)=f(x+y)$ 和 $kf(x)=f(kx)​$ #####缩放 旋转错切镜像正交投影平移变换平移变换不满足线性变换 仿射变换3x3矩阵不能表示平移操作，所以扩展到了4x4矩阵，成为齐次坐标空间homogeneous space，当使用4x4矩阵">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blogs.jiaqiang.fun/2019/02/19/unity-shader-matrix/">
+
+
+
+
+
+  <title>矩阵的几何意义 | 不积跬步无以至千里</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">不积跬步无以至千里</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blogs.jiaqiang.fun/2019/02/19/unity-shader-matrix/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiaq">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不积跬步无以至千里">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">矩阵的几何意义</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-19T14:19:14+08:00">
+                2019-02-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="变换transform"><a href="#变换transform" class="headerlink" title="变换transform"></a>变换transform</h4><p>变换指的是，把一些数据，如点方向矢量颜色等通过一定方式进行转换的过程。</p>
+<h4 id="线性变换"><a href="#线性变换" class="headerlink" title="线性变换"></a>线性变换</h4><p>保留矢量加和标量乘的变换，满足$f(x)+f(y)=f(x+y)$ 和 $kf(x)=f(kx)​$</p>
+<p>#####缩放</p>
+<h5 id="旋转"><a href="#旋转" class="headerlink" title="旋转"></a>旋转</h5><h5 id="错切"><a href="#错切" class="headerlink" title="错切"></a>错切</h5><h5 id="镜像"><a href="#镜像" class="headerlink" title="镜像"></a>镜像</h5><h5 id="正交投影"><a href="#正交投影" class="headerlink" title="正交投影"></a>正交投影</h5><h4 id="平移变换"><a href="#平移变换" class="headerlink" title="平移变换"></a>平移变换</h4><p>平移变换不满足线性变换</p>
+<h4 id="仿射变换"><a href="#仿射变换" class="headerlink" title="仿射变换"></a>仿射变换</h4><p>3x3矩阵不能表示平移操作，所以扩展到了4x4矩阵，成为齐次坐标空间homogeneous space，当使用4x4矩阵对一个点进行变换时，平移，缩放，旋转都会施加于该点，但如果对于一个方向矢量，平移的效果就会被忽略。</p>
+<h5 id="齐次坐标"><a href="#齐次坐标" class="headerlink" title="齐次坐标"></a>齐次坐标</h5><p><a href="http://www.cnblogs.com/csyisong/archive/2008/12/09/1351372.html" target="_blank" rel="noopener">齐次坐标</a> <strong>是计算机图形学的重要手段之一，它既能够用来明确区分向量和点，同时也更易于进行仿射(线性)几何变换。</strong></p>
+<ul>
+<li><p>普通坐标到齐次坐标<br>如果是一个点(1,4,7)，则变为(1,4,7,1)<br>如果是一个向量(x,y,z)，则变为(x, y, z, 0)</p>
+</li>
+<li><p>齐次坐标转换成普通坐标时</p>
+<p> 如果是(x,y,z,1)，则知道它是个点，变成(x,y,z)<br>如果是(x,y,z,0)，则知道它是个向量，仍然变成(x,y,z)</p>
+</li>
+<li><p>对于一个普通坐标的<em>点</em>P=(Px, Py, Pz)，有对应的一族齐次坐标(wPx, wPy, wPz, w)，其中w不等于零。比如，P(1, 4, 7)的齐次坐标有(1, 4, 7, 1)、（2, 8, 14, 2）、（-0.1, -0.4, -0.7, -0.1）等等。因此，如果把一个点从普通坐标变成齐次坐标，给x,y,z乘上同一个非零数w，然后增加第4个分量w；如果把一个齐次坐标转换成普通坐标，把前三个坐标同时除以第4个坐标，然后去掉第4个分量</p>
+<p>由于齐次坐标使用了4个分量来表达3D概念，使得平移变换可以使用矩阵进行，从而如F.S. Hill, JR所说，仿射（线性）变换的进行更加方便。由于图形硬件已经普遍地支持齐次坐标与矩阵乘法，因此更加促进了齐次坐标使用，使得它似乎成为图形学中的一个标准。</p>
+</li>
+<li><p>在unity中 可用在剪裁空间中 使得w有特殊含义 </p>
+</li>
+<li><p>齐次坐标使得<strong>平移变换可以用矩阵进行</strong>，正如fshill jr所说的仿射变换更加方便</p>
+</li>
+</ul>
+<h4 id="坐标空间"><a href="#坐标空间" class="headerlink" title="坐标空间"></a>坐标空间</h4><h5 id="模型空间"><a href="#模型空间" class="headerlink" title="模型空间"></a>模型空间</h5><h5 id="世界空间"><a href="#世界空间" class="headerlink" title="世界空间"></a>世界空间</h5><h5 id="观察空间"><a href="#观察空间" class="headerlink" title="观察空间"></a>观察空间</h5><p>是摄像机空间，以摄像机为原点属于右手坐标系，+x指向右边+y指向上方+z指向摄像机的后方即unity世界坐标系的-z方向，这符合openGL</p>
+<h5 id="剪裁空间"><a href="#剪裁空间" class="headerlink" title="剪裁空间"></a>剪裁空间</h5><p>clip space 也被称为齐次剪裁空间，用于变换的矩阵叫做剪裁矩阵clip matrix 或者投影矩阵projection matrix<br>视椎体是空间的一个区域有六个剪裁平面组成，分透视投影和正交投影<br>近剪裁平面和远剪裁平面<br>透视投影的视椎体是一个金字塔形，侧面的4个剪裁平面将会在摄像机处相交<br>正交投影的视椎体是一个长方体<br>如果直接使用视椎体定义的空间进行剪裁，那么不同的视椎体需要不同的处理过程，而且对于透视投影的视椎体来说，想要判断一个顶点是否处在一个金字塔内部是比较麻烦的。因此需要用一种更加通用的、方便的、和整洁的方式进行裁剪工作，这种方式就是通过一<strong>投影矩阵</strong>把顶点转换到一个裁剪空间中。<br><strong>投影矩阵</strong>有两个目的：</p>
+<ul>
+<li><p>为投影做准备。经过投影矩阵的变换后，顶点的w分量将会具有特殊的意义</p>
+</li>
+<li><p>对xyz分量进行缩放。经过投影矩阵的缩放后，我们可以直接使用w分量作为一个范围值，如果xyz都在这个范围内就说明这个顶点在剪裁空间中。点的w分量是1，矢量的w是0</p>
+<p>推导起来比较麻烦但是推导出来的投影矩阵的第四个w分量将有更加丰富的含义-w&lt;x&lt;w -w&lt;y&lt;w -w&lt;z&lt;w</p>
+</li>
+</ul>
+<h5 id="屏幕空间"><a href="#屏幕空间" class="headerlink" title="屏幕空间"></a>屏幕空间</h5><p>屏幕空间是一个二维空间，那么怎么把顶点从剪裁空间投影到屏幕空间中，来生成对应的2D坐标呢：</p>
+<ul>
+<li><p>需要进行标准齐次除法(homogeneous division)</p>
+<p>齐次除法也叫透视除法，是用齐次坐标系的w分量去除x，y，z分量。在openGL中得到的坐标叫做归一化的设备坐标normalized device coordinates（NDC），经过这一步可以将顶点坐标从齐次裁剪坐标空间转换到NDC中。经过透视投影变换后的裁剪空间，经过齐次除法后会变换到一个立方体内。每个分量范围都是[-1,1]</p>
+</li>
+<li><p>屏幕映射</p>
+<p>可以根据变换后的x和y坐标来映射输出窗口的对应像素坐标。z分量用于深度缓冲</p>
+<p><strong>总结：从剪裁空间到屏幕空间，首先进行齐次除法 把裁剪空间的坐标投影到 标准归一化设备坐标系中NDC，然后再映射到屏幕空间中 xy分量映射到屏幕的像素，z分量用于深度缓冲。</strong></p>
+<p>​                    <u>顶点从模型空间转换到屏幕空间的过程</u></p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">A[模型空间]--&gt;|模型变换|B[世界空间]</span><br><span class="line">B--&gt;|观察变换|C[观察空间]</span><br><span class="line">C--&gt;|投影矩阵|D[裁剪空间]</span><br><span class="line">D--&gt;|齐次除法和屏幕映射|E[屏幕空间]</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/unity/" rel="tag"># unity</a>
+          
+            <a href="/tags/shader/" rel="tag"># shader</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/18/unity-shader-math/" rel="next" title="unity shader 线性代数">
+                <i class="fa fa-chevron-left"></i> unity shader 线性代数
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/20/unity-shader-variables/" rel="prev" title="unity-shader-variables">
+                unity-shader-variables <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Jiaq</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#变换transform"><span class="nav-number">1.</span> <span class="nav-text">变换transform</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#线性变换"><span class="nav-number">2.</span> <span class="nav-text">线性变换</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#旋转"><span class="nav-number">2.1.</span> <span class="nav-text">旋转</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#错切"><span class="nav-number">2.2.</span> <span class="nav-text">错切</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#镜像"><span class="nav-number">2.3.</span> <span class="nav-text">镜像</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#正交投影"><span class="nav-number">2.4.</span> <span class="nav-text">正交投影</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#平移变换"><span class="nav-number">3.</span> <span class="nav-text">平移变换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#仿射变换"><span class="nav-number">4.</span> <span class="nav-text">仿射变换</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#齐次坐标"><span class="nav-number">4.1.</span> <span class="nav-text">齐次坐标</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#坐标空间"><span class="nav-number">5.</span> <span class="nav-text">坐标空间</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#模型空间"><span class="nav-number">5.1.</span> <span class="nav-text">模型空间</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#世界空间"><span class="nav-number">5.2.</span> <span class="nav-text">世界空间</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#观察空间"><span class="nav-number">5.3.</span> <span class="nav-text">观察空间</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#剪裁空间"><span class="nav-number">5.4.</span> <span class="nav-text">剪裁空间</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#屏幕空间"><span class="nav-number">5.5.</span> <span class="nav-text">屏幕空间</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiaq</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=732200829";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
